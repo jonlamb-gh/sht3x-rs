@@ -67,11 +67,15 @@ where
             .read(self.address as u8, &mut buf)
             .map_err(Error::I2c)?;
 
-        let temperature = check_crc([buf[0], buf[1]], buf[2]).map(convert_temperature)?;
-        let humidity = check_crc([buf[3], buf[4]], buf[5]).map(convert_humidity)?;
+        let (raw_temperature, temperature) =
+            check_crc([buf[0], buf[1]], buf[2]).map(|t| (t, convert_temperature(t)))?;
+        let (raw_humidity, humidity) =
+            check_crc([buf[3], buf[4]], buf[5]).map(|h| (h, convert_humidity(h)))?;
 
         Ok(Measurement {
+            raw_temperature,
             temperature,
+            raw_humidity,
             humidity,
         })
     }
@@ -306,8 +310,13 @@ impl Command {
 
 #[derive(Debug)]
 pub struct Measurement {
+    /// The raw temperature
+    pub raw_temperature: u16,
     /// The temperature in millidegress C
     pub temperature: i32,
+
+    /// The raw humidity
+    pub raw_humidity: u16,
     /// The relative humidity in millipercent
     pub humidity: u16,
 }
