@@ -99,6 +99,14 @@ where
         self.inner_read()
     }
 
+    pub fn stop<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
+        self.command(
+            Command::Break,
+            delay,
+            Some(Repeatability::High.max_duration()),
+        )
+    }
+
     /// Soft reset the sensor.
     pub fn reset<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         self.command(Command::SoftReset, delay, Some(SOFT_RESET_TIME_MS))
