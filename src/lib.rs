@@ -58,6 +58,10 @@ where
             delay,
             Some(rpt.max_duration()),
         )?;
+        self.inner_read()
+    }
+
+    fn inner_read(&mut self) -> Result<Measurement, Error<E>> {
         let mut buf = [0; 6];
         self.i2c
             .read(self.address as u8, &mut buf)
@@ -70,6 +74,25 @@ where
             temperature,
             humidity,
         })
+    }
+
+    pub fn start<D: DelayMs<u8>>(
+        &mut self,
+        rpt: Repeatability,
+        rate: Rate,
+        delay: &mut D,
+    ) -> Result<(), Error<E>> {
+        self.command(
+            Command::Periodic(rate, rpt),
+            delay,
+            Some(rpt.max_duration()),
+        )?;
+        Ok(())
+    }
+
+    pub fn fetch_data<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<Measurement, Error<E>> {
+        self.command(Command::FetchData, delay, None)?;
+        self.inner_read()
     }
 
     /// Soft reset the sensor.
@@ -169,7 +192,7 @@ pub enum ClockStretch {
 
 /// Periodic data acquisition rate
 #[allow(non_camel_case_types, unused)]
-enum Rate {
+pub enum Rate {
     /// 0.5 measurements per second
     R0_5,
     /// 1 measurement per second
@@ -283,7 +306,9 @@ impl Command {
 
 #[derive(Debug)]
 pub struct Measurement {
+    /// The temperature in millidegress C
     pub temperature: i32,
+    /// The relative humidity in millipercent
     pub humidity: u16,
 }
 
