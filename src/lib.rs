@@ -93,6 +93,15 @@ where
     pub fn clear_status<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<(), Error<E>> {
         self.command(Command::ClearStatus, delay, None)
     }
+
+    pub fn serial_number<D: DelayMs<u8>>(&mut self, delay: &mut D) -> Result<u16, Error<E>> {
+        self.command(Command::ReadSerialNumber, delay, None)?;
+        let mut buf = [0; 2];
+        self.i2c
+            .read(self.address as u8, &mut buf)
+            .map_err(Error::I2c)?;
+        Ok(u16::from_be_bytes(buf))
+    }
 }
 
 const fn convert_temperature(raw: u16) -> i32 {
@@ -203,6 +212,7 @@ enum Command {
     HeaterDisable,
     Status,
     ClearStatus,
+    ReadSerialNumber,
 }
 
 impl Command {
@@ -265,6 +275,8 @@ impl Command {
             Command::Status => 0xF32D,
             // Table 18
             Command::ClearStatus => 0x3041,
+
+            Command::ReadSerialNumber => 0x3780,
         }
     }
 }
