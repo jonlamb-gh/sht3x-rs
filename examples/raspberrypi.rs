@@ -2,7 +2,7 @@ extern crate linux_embedded_hal as hal;
 extern crate sht3x;
 
 use hal::{Delay, I2cdev};
-use sht3x::{Sht3x, Address, Repeatability};
+use sht3x::{Address, Repeatability, Sht3x};
 
 fn main() {
     println!("Hello, SHT31!");
